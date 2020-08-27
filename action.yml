@@ -5,7 +5,7 @@ author: 'Android-Actions'
 inputs:
   token:
     required: true
-    description: 'use ${{ secrets.GITHUB_TOKEN }}'
+    description: 'token to use for submitting'
 
 runs:
   using: 'node12'
