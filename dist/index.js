@@ -3238,18 +3238,18 @@ function submitAnnotations(annotations) {
     return __awaiter(this, void 0, void 0, function* () {
         const MAX_CHUNK_SIZE = 50;
         const TOTAL_CHUNKS = Math.ceil(annotations.length / MAX_CHUNK_SIZE);
-        const CHECK_NAME = "Android Lint";
+        const CHECK_NAME = 'Android Lint';
         const { data: { id: checkId } } = yield octokit.checks.create(Object.assign(Object.assign({}, github.context.repo), { started_at: new Date().toISOString(), head_sha: github.context.sha, status: TOTAL_CHUNKS === 1 ? 'completed' : 'in_progress', name: CHECK_NAME, output: {
-                title: "Android Lint results",
-                summary: "Android Lint results",
+                title: 'Android Lint results',
+                summary: 'Android Lint results',
                 annotations: annotations.splice(0, 50)
             } }));
         for (let chunk = 1; chunk < TOTAL_CHUNKS; chunk++) {
             const startChunk = chunk * MAX_CHUNK_SIZE;
             const endChunk = chunk + MAX_CHUNK_SIZE;
             octokit.checks.update(Object.assign(Object.assign({}, github.context.repo), { check_run_id: checkId, status: TOTAL_CHUNKS === chunk ? 'completed' : 'in_progress', output: {
-                    title: "Android Lint results",
-                    summary: "Android Lint results",
+                    title: 'Android Lint results',
+                    summary: 'Android Lint results',
                     annotations: annotations.splice(startChunk, endChunk)
                 } }));
         }
@@ -3295,7 +3295,7 @@ function run() {
                             start_line: parseInt(locationElement.attributes['line'], 10),
                             end_line: parseInt(locationElement.attributes['line'], 10),
                             start_column: parseInt(locationElement.attributes['column'], 10),
-                            annotation_level: issueElement.attributes['severity'],
+                            annotation_level: issueElement.attributes['severity'] === 'Warning' ? 'warning' : 'failure',
                             message: issueElement.attributes['message'],
                             title: `${issueElement.attributes['category']} - ${issueElement.attributes['summary']}`,
                             raw_details: issueElement.attributes['explanation']

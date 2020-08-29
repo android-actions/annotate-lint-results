@@ -97,7 +97,10 @@ async function run(): Promise<void> {
           start_line: parseInt(locationElement.attributes['line'], 10),
           end_line: parseInt(locationElement.attributes['line'], 10),
           start_column: parseInt(locationElement.attributes['column'], 10),
-          annotation_level: issueElement.attributes['severity'],
+          annotation_level:
+            issueElement.attributes['severity'] === 'Warning'
+              ? 'warning'
+              : 'failure',
           message: issueElement.attributes['message'],
           title: `${issueElement.attributes['category']} - ${issueElement.attributes['summary']}`,
           raw_details: issueElement.attributes['explanation']
