@@ -3235,12 +3235,25 @@ const fs = __importStar(__webpack_require__(747));
 const path = __importStar(__webpack_require__(622));
 const octokit = github.getOctokit(core.getInput('token', { required: true }));
 function submitAnnotations(annotations) {
-    for (let s = 0; s < annotations.length / 50; s++) {
-        octokit.checks.update(Object.assign(Object.assign({}, github.context.repo), { check_run_id: github.context.runId, output: {
-                summary: 'Android linting',
-                annotations: annotations.splice(s * 50, (s + 1) * 50)
+    return __awaiter(this, void 0, void 0, function* () {
+        const MAX_CHUNK_SIZE = 50;
+        const TOTAL_CHUNKS = Math.ceil(annotations.length / MAX_CHUNK_SIZE);
+        const CHECK_NAME = "Android Lint";
+        const { data: { id: checkId } } = yield octokit.checks.create(Object.assign(Object.assign({}, github.context.repo), { started_at: new Date().toISOString(), head_sha: github.context.sha, status: TOTAL_CHUNKS === 1 ? 'completed' : 'in_progress', name: CHECK_NAME, output: {
+                title: "Android Lint results",
+                summary: "Android Lint results",
+                annotations: annotations.splice(0, 50)
             } }));
-    }
+        for (let chunk = 1; chunk < TOTAL_CHUNKS; chunk++) {
+            const startChunk = chunk * MAX_CHUNK_SIZE;
+            const endChunk = chunk + MAX_CHUNK_SIZE;
+            octokit.checks.update(Object.assign(Object.assign({}, github.context.repo), { check_run_id: checkId, status: TOTAL_CHUNKS === chunk ? 'completed' : 'in_progress', output: {
+                    title: "Android Lint results",
+                    summary: "Android Lint results",
+                    annotations: annotations.splice(startChunk, endChunk)
+                } }));
+        }
+    });
 }
 function stripFilePath(filePath) {
     const filePathParts = filePath.split(path.sep);
@@ -3289,7 +3302,7 @@ function run() {
                         });
                     }
                 }
-                submitAnnotations(annotations);
+                yield submitAnnotations(annotations);
             }
         }
         catch (e_1_1) { e_1 = { error: e_1_1 }; }

@@ -18,14 +18,37 @@ type Annotation = {
 
 const octokit = github.getOctokit(core.getInput('token', {required: true}))
 
-function submitAnnotations(annotations: Annotation[]): void {
-  for (let s = 0; s < annotations.length / 50; s++) {
+async function submitAnnotations(annotations: Annotation[]): Promise<void> {
+  const MAX_CHUNK_SIZE = 50
+  const TOTAL_CHUNKS = Math.ceil(annotations.length / MAX_CHUNK_SIZE)
+  const CHECK_NAME = 'Android Lint'
+
+  const {
+    data: {id: checkId}
+  } = await octokit.checks.create({
+    ...github.context.repo,
+    started_at: new Date().toISOString(),
+    head_sha: github.context.sha,
+    status: TOTAL_CHUNKS === 1 ? 'completed' : 'in_progress',
+    name: CHECK_NAME,
+    output: {
+      title: 'Android Lint results',
+      summary: 'Android Lint results',
+      annotations: annotations.splice(0, 50)
+    }
+  })
+
+  for (let chunk = 1; chunk < TOTAL_CHUNKS; chunk++) {
+    const startChunk = chunk * MAX_CHUNK_SIZE
+    const endChunk = chunk + MAX_CHUNK_SIZE
     octokit.checks.update({
       ...github.context.repo,
-      check_run_id: github.context.runId,
+      check_run_id: checkId,
+      status: TOTAL_CHUNKS === chunk ? 'completed' : 'in_progress',
       output: {
-        summary: 'Android linting',
-        annotations: annotations.splice(s * 50, (s + 1) * 50)
+        title: 'Android Lint results',
+        summary: 'Android Lint results',
+        annotations: annotations.splice(startChunk, endChunk)
       }
     })
   }
@@ -82,7 +105,7 @@ async function run(): Promise<void> {
       }
     }
 
-    submitAnnotations(annotations)
+    await submitAnnotations(annotations)
   }
 }
 
