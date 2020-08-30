@@ -41,7 +41,7 @@ async function submitAnnotations(annotations: Annotation[]): Promise<void> {
   for (let chunk = 1; chunk < TOTAL_CHUNKS; chunk++) {
     const startChunk = chunk * MAX_CHUNK_SIZE
     const endChunk = chunk + MAX_CHUNK_SIZE
-    octokit.checks.update({
+    await octokit.checks.update({
       ...github.context.repo,
       check_run_id: checkId,
       status: TOTAL_CHUNKS === chunk ? 'completed' : 'in_progress',
@@ -92,6 +92,10 @@ async function run(): Promise<void> {
         /// Skip if the location was not in the repository
         if (repoFilePath === null) continue
 
+        core.debug(
+          `${repoFilePath}: ${locationElement.attributes['line']},${locationElement.attributes['column']}`
+        )
+
         annotations.push({
           path: repoFilePath,
           start_line: parseInt(locationElement.attributes['line'], 10),
@@ -108,8 +112,9 @@ async function run(): Promise<void> {
       }
     }
 
-    await submitAnnotations(annotations)
+    return submitAnnotations(annotations)
   }
 }
 
-run()
+// eslint-disable-next-line github/no-then
+run().catch(core.setFailed)

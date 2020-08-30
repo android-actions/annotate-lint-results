@@ -3247,7 +3247,7 @@ function submitAnnotations(annotations) {
         for (let chunk = 1; chunk < TOTAL_CHUNKS; chunk++) {
             const startChunk = chunk * MAX_CHUNK_SIZE;
             const endChunk = chunk + MAX_CHUNK_SIZE;
-            octokit.checks.update(Object.assign(Object.assign({}, github.context.repo), { check_run_id: checkId, status: TOTAL_CHUNKS === chunk ? 'completed' : 'in_progress', output: {
+            yield octokit.checks.update(Object.assign(Object.assign({}, github.context.repo), { check_run_id: checkId, status: TOTAL_CHUNKS === chunk ? 'completed' : 'in_progress', output: {
                     title: 'Android Lint results',
                     summary: 'Android Lint results',
                     annotations: annotations.splice(startChunk, endChunk)
@@ -3290,19 +3290,22 @@ function run() {
                         /// Skip if the location was not in the repository
                         if (repoFilePath === null)
                             continue;
+                        core.debug(`${repoFilePath}: ${locationElement.attributes['line']},${locationElement.attributes['column']}`);
                         annotations.push({
                             path: repoFilePath,
                             start_line: parseInt(locationElement.attributes['line'], 10),
                             end_line: parseInt(locationElement.attributes['line'], 10),
                             start_column: parseInt(locationElement.attributes['column'], 10),
-                            annotation_level: issueElement.attributes['severity'] === 'Warning' ? 'warning' : 'failure',
+                            annotation_level: issueElement.attributes['severity'] === 'Warning'
+                                ? 'warning'
+                                : 'failure',
                             message: issueElement.attributes['message'],
                             title: `${issueElement.attributes['category']} - ${issueElement.attributes['summary']}`,
                             raw_details: issueElement.attributes['explanation']
                         });
                     }
                 }
-                yield submitAnnotations(annotations);
+                return submitAnnotations(annotations);
             }
         }
         catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -3314,7 +3317,8 @@ function run() {
         }
     });
 }
-run();
+// eslint-disable-next-line github/no-then
+run().catch(core.setFailed);
 
 
 /***/ }),
