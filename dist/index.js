@@ -3247,7 +3247,7 @@ function submitAnnotations(annotations) {
             yield octokit.checks.update(Object.assign(Object.assign({}, github.context.repo), { check_run_id: checkId, status: TOTAL_CHUNKS === chunk ? 'completed' : 'in_progress', output: {
                     title: 'Android Lint results',
                     summary: 'Android Lint results',
-                    annotations: annotations.splice(startChunk, endChunk)
+                    annotations: annotations.slice(startChunk, endChunk)
                 } }));
         }
     });

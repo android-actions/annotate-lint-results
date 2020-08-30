@@ -49,7 +49,7 @@ async function submitAnnotations(annotations: Annotation[]): Promise<void> {
       output: {
         title: 'Android Lint results',
         summary: 'Android Lint results',
-        annotations: annotations.splice(startChunk, endChunk)
+        annotations: annotations.slice(startChunk, endChunk)
       }
     })
   }
