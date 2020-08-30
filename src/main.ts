@@ -36,7 +36,7 @@ async function submitAnnotations(annotations: Annotation[]): Promise<void> {
 
   for (let chunk = 0; chunk < TOTAL_CHUNKS; chunk++) {
     const startChunk = chunk * MAX_CHUNK_SIZE
-    const endChunk = chunk + MAX_CHUNK_SIZE
+    const endChunk = startChunk + MAX_CHUNK_SIZE
 
     core.debug(
       `Uploading chunk ${chunk} with annotations ${startChunk} trough ${endChunk}`
