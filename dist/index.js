@@ -3236,13 +3236,13 @@ const path = __importStar(__webpack_require__(622));
 const octokit = github.getOctokit(core.getInput('token', { required: true }));
 function submitAnnotations(annotations) {
     return __awaiter(this, void 0, void 0, function* () {
-        const MAX_CHUNK_SIZE = 50;
+        const MAX_CHUNK_SIZE = 40;
         const TOTAL_CHUNKS = Math.ceil(annotations.length / MAX_CHUNK_SIZE);
         const CHECK_NAME = 'Android Lint';
         const { data: { id: checkId } } = yield octokit.checks.create(Object.assign(Object.assign({}, github.context.repo), { started_at: new Date().toISOString(), head_sha: github.context.sha, status: 'in_progress', name: CHECK_NAME }));
         for (let chunk = 0; chunk < TOTAL_CHUNKS; chunk++) {
             const startChunk = chunk * MAX_CHUNK_SIZE;
-            const endChunk = chunk + MAX_CHUNK_SIZE - 1;
+            const endChunk = chunk + MAX_CHUNK_SIZE;
             yield octokit.checks.update(Object.assign(Object.assign({}, github.context.repo), { check_run_id: checkId, status: TOTAL_CHUNKS === chunk ? 'completed' : 'in_progress', output: {
                     title: 'Android Lint results',
                     summary: 'Android Lint results',

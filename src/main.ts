@@ -20,7 +20,7 @@ type Annotation = {
 const octokit = github.getOctokit(core.getInput('token', {required: true}))
 
 async function submitAnnotations(annotations: Annotation[]): Promise<void> {
-  const MAX_CHUNK_SIZE = 50
+  const MAX_CHUNK_SIZE = 40
   const TOTAL_CHUNKS = Math.ceil(annotations.length / MAX_CHUNK_SIZE)
   const CHECK_NAME = 'Android Lint'
 
@@ -36,7 +36,7 @@ async function submitAnnotations(annotations: Annotation[]): Promise<void> {
 
   for (let chunk = 0; chunk < TOTAL_CHUNKS; chunk++) {
     const startChunk = chunk * MAX_CHUNK_SIZE
-    const endChunk = chunk + MAX_CHUNK_SIZE - 1
+    const endChunk = chunk + MAX_CHUNK_SIZE
     await octokit.checks.update({
       ...github.context.repo,
       check_run_id: checkId,
