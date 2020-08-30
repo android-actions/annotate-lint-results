@@ -3243,6 +3243,7 @@ function submitAnnotations(annotations) {
         for (let chunk = 0; chunk < TOTAL_CHUNKS; chunk++) {
             const startChunk = chunk * MAX_CHUNK_SIZE;
             const endChunk = chunk + MAX_CHUNK_SIZE;
+            core.debug(`Uploading chunk ${chunk} with annotations ${startChunk} trough ${endChunk}`);
             yield octokit.checks.update(Object.assign(Object.assign({}, github.context.repo), { check_run_id: checkId, status: TOTAL_CHUNKS === chunk ? 'completed' : 'in_progress', output: {
                     title: 'Android Lint results',
                     summary: 'Android Lint results',
