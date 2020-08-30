@@ -29,16 +29,11 @@ async function submitAnnotations(annotations: Annotation[]): Promise<void> {
     ...github.context.repo,
     started_at: new Date().toISOString(),
     head_sha: github.context.sha,
-    status: TOTAL_CHUNKS === 1 ? 'completed' : 'in_progress',
-    name: CHECK_NAME,
-    output: {
-      title: 'Android Lint results',
-      summary: 'Android Lint results',
-      annotations: annotations.splice(0, 50)
-    }
+    status: 'in_progress',
+    name: CHECK_NAME
   })
 
-  for (let chunk = 1; chunk < TOTAL_CHUNKS; chunk++) {
+  for (let chunk = 0; chunk < TOTAL_CHUNKS; chunk++) {
     const startChunk = chunk * MAX_CHUNK_SIZE
     const endChunk = chunk + MAX_CHUNK_SIZE
     await octokit.checks.update({
