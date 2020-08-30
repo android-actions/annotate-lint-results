@@ -17,6 +17,16 @@ type Annotation = {
   raw_details: string
 }
 
+type Conclusion =
+  | 'cancelled'
+  | 'success'
+  | 'failure'
+  | 'neutral'
+  | 'skipped'
+  | 'timed_out'
+  | 'action_required'
+  | undefined
+
 const getSha = (): string => {
   const pullRequest = github.context.payload.pull_request
 
@@ -34,6 +44,8 @@ async function submitAnnotations(annotations: Annotation[]): Promise<void> {
   const TOTAL_CHUNKS = Math.ceil(annotations.length / MAX_CHUNK_SIZE)
   const CHECK_NAME = 'Android Lint'
 
+  let conclusion: Conclusion = 'success'
+
   const {
     data: {id: checkId}
   } = await octokit.checks.create({
@@ -44,35 +56,41 @@ async function submitAnnotations(annotations: Annotation[]): Promise<void> {
     name: CHECK_NAME
   })
 
-  for (let chunk = 0; chunk < TOTAL_CHUNKS; chunk++) {
-    const startChunk = chunk * MAX_CHUNK_SIZE
-    const endChunk = startChunk + MAX_CHUNK_SIZE
+  try {
+    for (let chunk = 0; chunk < TOTAL_CHUNKS; chunk++) {
+      const startChunk = chunk * MAX_CHUNK_SIZE
+      const endChunk = startChunk + MAX_CHUNK_SIZE
 
-    core.debug(
-      `Uploading chunk ${chunk} with annotations ${startChunk} trough ${endChunk}`
-    )
+      core.debug(
+        `Uploading chunk ${chunk} with annotations ${startChunk} trough ${endChunk}`
+      )
 
+      await octokit.checks.update({
+        ...github.context.repo,
+        check_run_id: checkId,
+        status: 'in_progress',
+        output: {
+          title: 'Android Lint results',
+          summary: 'Android Lint results',
+          annotations: annotations.slice(startChunk, endChunk)
+        }
+      })
+    }
+  } catch {
+    conclusion = 'failure'
+  } finally {
     await octokit.checks.update({
       ...github.context.repo,
       check_run_id: checkId,
-      status: 'in_progress',
+      status: 'completed',
+      conclusion,
+      completed_at: new Date().toISOString(),
       output: {
         title: 'Android Lint results',
-        summary: 'Android Lint results',
-        annotations: annotations.slice(startChunk, endChunk)
+        summary: 'Android Lint results'
       }
     })
   }
-
-  await octokit.checks.update({
-    ...github.context.repo,
-    check_run_id: checkId,
-    status: 'completed',
-    output: {
-      title: 'Android Lint results',
-      summary: 'Android Lint results'
-    }
-  })
 }
 
 function stripFilePath(filePath: string): string | null {

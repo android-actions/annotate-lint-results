@@ -3246,21 +3246,29 @@ function submitAnnotations(annotations) {
         const MAX_CHUNK_SIZE = 40;
         const TOTAL_CHUNKS = Math.ceil(annotations.length / MAX_CHUNK_SIZE);
         const CHECK_NAME = 'Android Lint';
+        let conclusion = 'success';
         const { data: { id: checkId } } = yield octokit.checks.create(Object.assign(Object.assign({}, github.context.repo), { started_at: new Date().toISOString(), head_sha: getSha(), status: 'in_progress', name: CHECK_NAME }));
-        for (let chunk = 0; chunk < TOTAL_CHUNKS; chunk++) {
-            const startChunk = chunk * MAX_CHUNK_SIZE;
-            const endChunk = startChunk + MAX_CHUNK_SIZE;
-            core.debug(`Uploading chunk ${chunk} with annotations ${startChunk} trough ${endChunk}`);
-            yield octokit.checks.update(Object.assign(Object.assign({}, github.context.repo), { check_run_id: checkId, status: 'in_progress', output: {
+        try {
+            for (let chunk = 0; chunk < TOTAL_CHUNKS; chunk++) {
+                const startChunk = chunk * MAX_CHUNK_SIZE;
+                const endChunk = startChunk + MAX_CHUNK_SIZE;
+                core.debug(`Uploading chunk ${chunk} with annotations ${startChunk} trough ${endChunk}`);
+                yield octokit.checks.update(Object.assign(Object.assign({}, github.context.repo), { check_run_id: checkId, status: 'in_progress', output: {
+                        title: 'Android Lint results',
+                        summary: 'Android Lint results',
+                        annotations: annotations.slice(startChunk, endChunk)
+                    } }));
+            }
+        }
+        catch (_a) {
+            conclusion = 'failure';
+        }
+        finally {
+            yield octokit.checks.update(Object.assign(Object.assign({}, github.context.repo), { check_run_id: checkId, status: 'completed', conclusion, completed_at: new Date().toISOString(), output: {
                     title: 'Android Lint results',
-                    summary: 'Android Lint results',
-                    annotations: annotations.slice(startChunk, endChunk)
+                    summary: 'Android Lint results'
                 } }));
         }
-        yield octokit.checks.update(Object.assign(Object.assign({}, github.context.repo), { check_run_id: checkId, status: 'completed', output: {
-                title: 'Android Lint results',
-                summary: 'Android Lint results'
-            } }));
     });
 }
 function stripFilePath(filePath) {
