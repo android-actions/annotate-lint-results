@@ -17,6 +17,16 @@ type Annotation = {
   raw_details: string
 }
 
+const getSha = (): string => {
+  const pullRequest = github.context.payload.pull_request
+
+  if (!pullRequest) {
+    return github.context.sha
+  }
+
+  return pullRequest.head.sha
+}
+
 const octokit = github.getOctokit(core.getInput('token', {required: true}))
 
 async function submitAnnotations(annotations: Annotation[]): Promise<void> {
@@ -29,7 +39,7 @@ async function submitAnnotations(annotations: Annotation[]): Promise<void> {
   } = await octokit.checks.create({
     ...github.context.repo,
     started_at: new Date().toISOString(),
-    head_sha: github.context.sha,
+    head_sha: getSha(),
     status: 'in_progress',
     name: CHECK_NAME
   })
@@ -45,7 +55,7 @@ async function submitAnnotations(annotations: Annotation[]): Promise<void> {
     await octokit.checks.update({
       ...github.context.repo,
       check_run_id: checkId,
-      status: TOTAL_CHUNKS === chunk ? 'completed' : 'in_progress',
+      status: 'in_progress',
       output: {
         title: 'Android Lint results',
         summary: 'Android Lint results',
@@ -53,6 +63,16 @@ async function submitAnnotations(annotations: Annotation[]): Promise<void> {
       }
     })
   }
+
+  await octokit.checks.update({
+    ...github.context.repo,
+    check_run_id: checkId,
+    status: 'completed',
+    output: {
+      title: 'Android Lint results',
+      summary: 'Android Lint results'
+    }
+  })
 }
 
 function stripFilePath(filePath: string): string | null {
