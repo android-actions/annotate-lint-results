@@ -3286,6 +3286,10 @@ function run() {
                         /// Skip if the location was not in the repository
                         if (repoFilePath === null)
                             continue;
+                        if (parseInt(locationElement.attributes['column'], 10) === undefined)
+                            continue;
+                        if (parseInt(locationElement.attributes['line'], 10) === undefined)
+                            continue;
                         core.debug(`${repoFilePath}: ${locationElement.attributes['line']},${locationElement.attributes['column']}`);
                         annotations.push({
                             path: repoFilePath,
