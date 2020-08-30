@@ -36,7 +36,7 @@ async function submitAnnotations(annotations: Annotation[]): Promise<void> {
 
   for (let chunk = 0; chunk < TOTAL_CHUNKS; chunk++) {
     const startChunk = chunk * MAX_CHUNK_SIZE
-    const endChunk = chunk + MAX_CHUNK_SIZE
+    const endChunk = chunk + MAX_CHUNK_SIZE - 1
     await octokit.checks.update({
       ...github.context.repo,
       check_run_id: checkId,
